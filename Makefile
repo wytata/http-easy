@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=c11 -g
 
 # Project name and source files
-TARGET = http-server
+TARGET = http-easy
 SRC_DIR = src
 BUILD_DIR = build
 SRC = $(wildcard $(SRC_DIR)/*.c)
