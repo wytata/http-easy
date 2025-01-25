@@ -11,11 +11,13 @@
 
 #include "connection.h"
 #include "util.h"
+#include "log.h"
 
 #define MAX_CONNECTIONS 10
 
 int main(int argc, char *argv[])
 {
+	LOG_INFO("Starting server");
 	int sockfd;
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		exit_on_error("Failure in socket()");
@@ -38,7 +40,7 @@ int main(int argc, char *argv[])
 	if (listen(sockfd, MAX_CONNECTIONS) ) {
 		exit_on_error("Failure in listen()");
 	}
-	printf("Listening on port %d...\n", rand_port);
+	LOG_INFO("Server listening on port %d", rand_port);
 
 	struct sockaddr_in client_addr;
 	socklen_t client_addr_len;
