@@ -37,10 +37,14 @@ process to attempt to ensure full cross-platform capabilities.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-At the moment, there is very little functionality to the server. Nevertheless, you may simply run the server on your machine as follows:
+At the moment, there is very little functionality to the server. The usage is as follows:
 ```sh
-./http-easy
+./http-easy [OPTIONS]
+Options:
+-p <PORT_NO> (Bind server socket to port_no)
+-h Get this usage information
 ```
+If a port is not provided, a random one above 1000 will be chosen for you.
 
 <!-- ROADMAP -->
 ## Roadmap
