@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -g
+CFLAGS = -Wall -Wextra -g
 
 # Project name and source files
 TARGET = http-easy
