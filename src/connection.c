@@ -5,12 +5,11 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/signal.h>
-#include <ctype.h>
 
 #include "connection.h"
 #include "log.h"
+#include "handlers.h"
 
-#define MAX_TARGET_LEN 256
 #define REALLOC_THRESHOLD 1024 // Experiment with this???
 #define TIMEOUT_SECONDS 5
 #define TIMEOUT_MICROSECONDS 0
@@ -63,10 +62,10 @@ void new_connection_entrypoint(int client_fd) {
 }
 
 void process_request(char *request_buf, int request_len) {
-	char request_target[MAX_TARGET_LEN + 1];
 	if (strncmp(request_buf, "GET ", 4) == 0) {
 		LOG_INFO("Received GET request");
 		request_buf += 4;
+		handle_get(request_buf, request_len - 4);
 	} else if (strncmp(request_buf, "HEAD ", 5) == 0) {
 		LOG_INFO("Received HEAD request");
 		request_buf += 5;
@@ -95,18 +94,4 @@ void process_request(char *request_buf, int request_len) {
 		LOG_ERROR("Received request of invalid type");
 		return;
 	}
-
-	int request_target_len = 0;
-	char *iter = request_target;
-	while (!isspace((*iter++ = *request_buf++))) {
-		request_target_len++;
-		if (request_target_len == MAX_TARGET_LEN + 1) {
-			LOG_ERROR("Request target length greater than maximum");
-			return;
-		}
-	}
-	request_target[request_target_len] = 0;
-	LOG_INFO("Request target - %s", request_target);
-
-	//write(STDOUT_FILENO, request_buf, request_len);
 }
