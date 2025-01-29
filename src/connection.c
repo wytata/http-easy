@@ -23,8 +23,7 @@ void new_connection_entrypoint(int client_fd) {
 	struct timeval timeout = {TIMEOUT_SECONDS, TIMEOUT_MICROSECONDS};
 	while (1) {
 		FD_ZERO(&read_fds);
-		FD_SET(client_fd, &read_fds);
-		if ((select_result = select(client_fd + 1, &read_fds, NULL, NULL, &timeout)) > 0) {
+		FD_SET(client_fd, &read_fds); if ((select_result = select(client_fd + 1, &read_fds, NULL, NULL, &timeout)) > 0) {
 			bytes_read = recv(client_fd, client_buf + cur_pos, buf_size - cur_pos, 0);
 			if (bytes_read == -1) {
 				LOG_ERROR("Failure in new_connection_entrypoint()");
@@ -55,17 +54,18 @@ void new_connection_entrypoint(int client_fd) {
 		
 	}
 	client_buf[cur_pos] = 0;
-	process_request(client_buf, cur_pos);
+	process_request(client_fd, client_buf, cur_pos);
 
+	shutdown(client_fd, SHUT_RDWR);
 	LOG_WARN("Child proc %d exiting", getpid());
 	exit(rc);
 }
 
-void process_request(char *request_buf, int request_len) {
+void process_request(int client_fd, char *request_buf, int request_len) {
 	if (strncmp(request_buf, "GET ", 4) == 0) {
 		LOG_INFO("Received GET request");
 		request_buf += 4;
-		handle_get(request_buf, request_len - 4);
+		handle_get(client_fd, request_buf, request_len - 4);
 	} else if (strncmp(request_buf, "HEAD ", 5) == 0) {
 		LOG_INFO("Received HEAD request");
 		request_buf += 5;
@@ -87,8 +87,7 @@ void process_request(char *request_buf, int request_len) {
 	} else if (strncmp(request_buf, "PATCH ", 6) == 0) {
 		LOG_INFO("Received PATCH request");
 		request_buf += 6;
-	} else if (strncmp(request_buf, "CONNECT ", 8) == 0) {
-		LOG_INFO("Received CONNECT request");
+	} else if (strncmp(request_buf, "CONNECT ", 8) == 0) { LOG_INFO("Received CONNECT request");
 		request_buf += 8;
 	} else {
 		LOG_ERROR("Received request of invalid type");
