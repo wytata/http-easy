@@ -1,5 +1,8 @@
-#include <cstdint>
+#include <string.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #include "log.h"
 #include "table.h"
@@ -32,7 +35,7 @@ void table_destroy(table *table) {
 	free(table);
 }
 
-bool *table_expand(table *table) {
+bool table_expand(table *table) {
 	unsigned long new_capacity = table->capacity * 2;
 	if (new_capacity > UINT32_MAX) {
 		LOG_ERROR("Maximum table size reached, table could not be expanded.");
@@ -47,27 +50,54 @@ bool *table_expand(table *table) {
 
 	for (uint32_t i = 0; i < table->capacity; i++) {
 		if (table->entries[i].key != NULL) {
-			entries_insert(new_entry_list, table->entries[i].key, *table->entries[i].value, new_capacity);
+			entries_insert(new_entry_list, table->entries[i].key, table->entries[i].value, new_capacity);
 		}
 	}
 
+	free(table->entries);
 	table->capacity = new_capacity;
+	table->entries = new_entry_list;
 
 	return true;
 }
 
 table_value table_get(table *table, const char *key) {
-	if (table->size >= (3 / 4) * table->capacity) { // Expand
-
+	uint32_t index = hash_key(key) % table->capacity;
+	while (strcmp(key, table->entries[index].key) != 0) {
+		if (index >= table->capacity) {
+			index = 0;
+		} else {
+			index++;
+		}
 	}
+
+	return table->entries[index].value;
 }
 
 bool table_insert(table *table, const char *key, table_value value) {
+	if (table->size >= (3 * table->capacity / 4)) { // Expand
+		if (!table_expand(table)) {
+			LOG_ERROR("Failed to expand table");
+			return false;
+		}
+	}
 
+	entries_insert(table->entries, key, value, table->capacity);
+	return true;
 }
 
-bool entries_insert(table_entry *table_entries, const char *key, table_value value, uint32_t capacity) {
+void entries_insert(table_entry *table_entries, const char *key, table_value value, uint32_t capacity) {
+	uint32_t index = hash_key(key) % capacity;
+	while (table_entries[index].key != NULL) {
+		if (index >= capacity) {
+			index = 0;
+		} else {
+			index++;
+		}
+	}
 
+	table_entries[index].key = key;
+	table_entries[index].value = value;
 }
 
 uint32_t hash_key(const char *key) {
@@ -83,5 +113,28 @@ uint32_t hash_key(const char *key) {
 	return hash;
 }
 
+void table_print(table *table) {
+	printf("{\n");
 
+	uint32_t index = 0;
+	while (index < table->capacity) {
+		if (table->entries[index].key != NULL) {
+			const char *key = table->entries[index].key;
+			table_value entry = table->entries[index].value;
+			switch (entry.kind) {
+				case UINT:
+					printf("\t%s: %d\n", key, entry.data.uint_value);
+					break;
+				case STRING:
+					printf("\t%s: ", key);
+					fflush(stdout);
+					write(STDOUT_FILENO, entry.data.string_value.string, entry.data.string_value.string_len);
+					printf("\n");
+					break;
+			}
+		}
+		index++;
+	}
 
+	printf("}\n");
+}

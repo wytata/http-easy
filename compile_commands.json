@@ -1,0 +1,7 @@
+[
+  {
+    "directory": "/home/wyatt/dev/http-easy",
+    "file": "src/main.c",
+    "command": "gcc -I src/ -Wall -Wextra -g -c src/main.c -o build/main.o"
+  }
+]

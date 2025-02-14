@@ -1,33 +1,42 @@
-# Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+INCLUDE_DIR = src/
+CFLAGS = -I $(INCLUDE_DIR)
+CFLAGS += -Wall -Wextra -g
 
-# Project name and source files
 TARGET = http-easy
 SRC_DIR = src
 BUILD_DIR = build
 SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRC))
+OBJ_NO_MAIN = $(filter-out $(BUILD_DIR)/main.o, $(OBJ))
 
-# Default rule
+TEST_DIR = test
+TEST_BUILD_DIR = $(TEST_DIR)/build
+TEST_SRCS = $(wildcard $(TEST_DIR)/*.c)
+TESTS = $(patsubst $(TEST_DIR)/%.c, $(TEST_BUILD_DIR)/%, $(TEST_SRCS))
+
 all: $(BUILD_DIR) $(TARGET)
 
-# Build the target
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
 
-# Compile source files into object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Create build directory if it doesn't exist
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Clean build files
-clean:
-	rm -rf $(BUILD_DIR) $(TARGET)
+$(TEST_BUILD_DIR):
+	mkdir -p $(TEST_BUILD_DIR)
 
-# Phony targets
-.PHONY: all clean
+$(TEST_BUILD_DIR)/%: $(TEST_DIR)/%.c $(TEST_BUILD_DIR) $(OBJ_NO_MAIN)
+	$(CC) $(CFLAGS) $< $(OBJ_NO_MAIN) -o $@ 
+
+test: $(TESTS) $(TEST_BUILD_DIR)
+	for test in $(TESTS); do ./$$test; done
+
+clean:
+	rm -rf $(BUILD_DIR) $(TEST_BUILD_DIR) $(TARGET)
+
+.PHONY: all clean test
 

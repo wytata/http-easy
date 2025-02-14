@@ -21,12 +21,12 @@ typedef struct {
             uint32_t string_len;
         } string_value;
         uint32_t uint_value;
-    };
+    } data;
 } table_value;
 
 typedef struct {
-    char *key; 
-    table_value *value;
+    const char *key; 
+    table_value value;
 } table_entry;
 
 typedef struct {
@@ -37,10 +37,11 @@ typedef struct {
 
 table *table_create();
 void table_destroy(table *table);
-bool *table_expand(table *table);
+bool table_expand(table *table);
 table_value table_get(table *table, const char *key);
 bool table_insert(table *table, const char *key, table_value value);
-bool entries_insert(table_entry *table_entries, const char *key, table_value value, uint32_t capacity);
+void entries_insert(table_entry *table_entries, const char *key, table_value value, uint32_t capacity);
 uint32_t hash_key(const char *key);
+void table_print(table *table);
 
 #endif // !TABLE_H
