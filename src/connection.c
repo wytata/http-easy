@@ -7,6 +7,7 @@
 #include <sys/signal.h>
 
 #include "connection.h"
+#include "headers.h"
 #include "log.h"
 #include "handlers.h"
 
@@ -62,6 +63,15 @@ void new_connection_entrypoint(int client_fd) {
 }
 
 void process_request(int client_fd, char *request_buf, int request_len) {
+	LOG_INFO("Processing request of length %d\n", request_len);
+	char *header_start = strstr(request_buf, "\r\n");
+	if (!header_start) {
+		LOG_ERROR("Received one line request"); // TODO - better log info for this scenario
+		return;
+	}
+	header_start += 2;
+	table *header_table = build_header_table(header_start, request_len - (header_start - request_buf));
+
 	if (strncmp(request_buf, "GET ", 4) == 0) {
 		LOG_INFO("Received GET request");
 		request_buf += 4;
